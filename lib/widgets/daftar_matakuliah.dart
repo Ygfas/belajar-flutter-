@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../screens/detail_mata_kuliah_screen.dart';
+// Tambahan Langkah 2: Import widget LikeButton (sesuaikan path jika berada di folder lain, misal '../widgets/like_button.dart')
+import 'like_button.dart';
 
 class DaftarMataKuliah extends StatelessWidget {
   // 1. Menambahkan parameter untuk menerima data dari BerandaScreen
@@ -40,7 +42,8 @@ class DaftarMataKuliah extends StatelessWidget {
             subtitle: Text(
               '${mk['sks']} SKS ${mk.containsKey('dosen') ? '- ${mk['dosen']}' : ''}',
             ),
-            trailing: const Icon(Icons.chevron_right),
+            // Tambahan Langkah 2: Mengubah ikon chevron menjadi LikeButton
+            trailing: const LikeButton(),
             onTap: () {
               Navigator.push(
                 context,

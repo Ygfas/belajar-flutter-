@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'models/counter_model.dart';
+import 'models/presensi_model.dart';
 
 import 'widgets/kartu_info_kampus.dart';
 import 'widgets/tombol_favorit.dart';
@@ -6,14 +10,23 @@ import 'widgets/kartu_profil.dart';
 import 'widgets/header_dashboard.dart';
 import 'widgets/menu_dashboard.dart';
 import 'widgets/daftar_matakuliah.dart';
+import 'widgets/stepper_counter.dart';
 import 'screens/profil_screen.dart';
 import 'screens/detail_mata_kuliah_screen.dart';
 import 'screens/tambah_mata_kuliah_screen.dart';
-// Tambahkan import untuk MainNavigationScreen
 import 'screens/main_navigation_screen.dart';
+import 'screens/presensi_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => CounterModel()),
+        ChangeNotifierProvider(create: (context) => PresensiModel()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -40,19 +53,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        // =================================================================
-        // OPSI 1: Tampilan BerandaScreen (Drawer Navigation - Praktikum 1-5)
-        // Hapus tanda komentar (//) pada baris di bawah ini dan komentari OPSI 2
-        // jika ingin melihat tampilan Beranda lama.
-        // =================================================================
-        // '/': (context) => const BerandaScreen(),
-
-        // =================================================================
-        // OPSI 2: Tampilan MainNavigationScreen (Bottom Navigation - Praktikum 6)
-        // Aktifkan baris ini untuk menerapkan Praktikum 6 Langkah 3
-        // =================================================================
-        '/': (context) => const MainNavigationScreen(),
-
+        '/': (context) => const BerandaScreen(),
         '/profil': (context) => const ProfilScreen(),
       },
       onGenerateRoute: (settings) {
@@ -77,13 +78,27 @@ class BerandaScreen extends StatefulWidget {
 
 class _BerandaScreenState extends State<BerandaScreen> {
   final List<Map<String, String>> mataKuliah = <Map<String, String>>[];
+  int targetSksSemester = 20;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Konsep Widget Flutter'),
+        title: const Text('Belajar UI Flutter...'),
         actions: [
+          Consumer<CounterModel>(
+            builder: (context, counterModel, child) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Center(
+                  child: Text(
+                    'Notifikasi: ${counterModel.counter}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
@@ -92,7 +107,6 @@ class _BerandaScreenState extends State<BerandaScreen> {
           ),
         ],
       ),
-      // Menambahkan Drawer sesuai Praktikum 5 Langkah 1
       drawer: Builder(
         builder: (drawerContext) => Drawer(
           child: ListView(
@@ -109,6 +123,19 @@ class _BerandaScreenState extends State<BerandaScreen> {
                 leading: const Icon(Icons.home),
                 title: const Text('Beranda'),
                 onTap: () => Navigator.pop(drawerContext),
+              ),
+              ListTile(
+                leading: const Icon(Icons.qr_code_scanner),
+                title: const Text('Presensi'),
+                onTap: () {
+                  Navigator.pop(drawerContext);
+                  Navigator.push(
+                    drawerContext,
+                    MaterialPageRoute(
+                      builder: (context) => const PresensiScreen(),
+                    ),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.person),
@@ -134,23 +161,108 @@ class _BerandaScreenState extends State<BerandaScreen> {
             const SizedBox(height: 16),
             const MenuDashboard(),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.teal.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.teal),
-              ),
-              child: const Text(
-                'Halo, ini adalah sebuah Widget!',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            const KartuProfil(),
+            const SizedBox(height: 16),
+
+            // Ringkasan Presensi (Dipindahkan ke atas Simulasi Notifikasi)
+            Consumer<PresensiModel>(
+              builder: (context, presensi, child) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Ringkasan presensi hari ini: ${presensi.jumlahHadir} dari ${presensi.daftarMahasiswa.length} mahasiswa hadir',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Simulasi Notifikasi Masuk (CounterModel Provider)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Simulasi Notifikasi Masuk:',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  Consumer<CounterModel>(
+                    builder: (context, counterModel, child) {
+                      return Row(
+                        children: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              shape: const StadiumBorder(),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                            ),
+                            onPressed: () {
+                              if (counterModel.counter > 0) {
+                                // Menurunkan counter jika ada metodenya
+                              }
+                            },
+                            child: const Text('-'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: Text(
+                              '${counterModel.counter}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              shape: const StadiumBorder(),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                            ),
+                            onPressed: () {
+                              counterModel.increment();
+                            },
+                            child: const Text('+'),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
-            const KartuInfoKampus(),
-            const TombolFavorit(),
-            const Divider(height: 32),
-            const KartuProfil(),
+
+            // Target SKS Semester Ini
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Target SKS Semester Ini:',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  StepperCounter(
+                    nilai: targetSksSemester,
+                    onChanged: (nilaiBaru) {
+                      setState(() {
+                        targetSksSemester = nilaiBaru;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             DaftarMataKuliah(mataKuliahTambahan: mataKuliah),
             const SizedBox(height: 24),
